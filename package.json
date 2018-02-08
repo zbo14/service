@@ -2,19 +2,16 @@
   "name": "service",
   "author": "Zachary Balder",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "lint": "eslint src",
-    "test": "nyc mocha --reporter spec",
-    "command": "node_modules/.bin/nodemon index.js"
+    "lint": "eslint src example",
+    "test": "nyc mocha --reporter spec"
   },
   "license": "ISC",
-  "dependencies": {
-    "chai": "^4.1.2",
-    "mocha": "^5.0.0"
-  },
   "devDependencies": {
+    "chai": "^4.1.2",
     "eslint": "^4.16.0",
+    "mocha": "^5.0.0",
     "nyc": "^11.4.1"
   },
   "directories": {

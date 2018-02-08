@@ -1,7 +1,7 @@
 'use strict'
 
 const WebSocket = require('ws')
-const service = require('./service')
+const service = require('../src/index')
 
 const close = () => (ws) => () => {
   ws.close()
@@ -40,15 +40,12 @@ const stop = (emitter) => () => {
   emitter.emit('unregister')
 }
 
+const handlers = {
+  'close': close,
+  'recv': recv, 
+  'send': send
+}
+
 module.exports = () => {
-  return service({
-    'name': 'client', 
-    'handlers': {
-      'close': close,
-      'recv': recv, 
-      'send': send
-    }, 
-    'start': start,
-    'stop': stop
-  })
+  return service(handlers, start, stop)
 }

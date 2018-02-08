@@ -2,7 +2,7 @@
 
 const EventEmitter = require('events')
 
-module.exports = ({ handlers, start, stop }) => {
+module.exports = (handlers, start, stop) => {
 
   const emitter = new EventEmitter()
 
@@ -13,12 +13,13 @@ module.exports = ({ handlers, start, stop }) => {
   })
 
   const events = Object.keys(handlers)
+  const newHandlers = {}
   let running = false
   start = start(emitter)
   stop = stop(emitter)
 
   events.forEach((event) => {
-    handlers[event] = handlers[event](emitter)
+    newHandlers[event] = handlers[event](emitter)
   })
 
   emitter.on('start', (...args) => {
@@ -33,13 +34,13 @@ module.exports = ({ handlers, start, stop }) => {
     })
   })
 
-  emitter.on('register', (...args) => {
+  emitter.on('register', (...args1) => {
     setImmediate(() => {
       events.forEach((event) => {
-        const handler = handlers[event](...args)
-        emitter.on(event, (...args) => {
+        const handler = newHandlers[event](...args1)
+        emitter.on(event, (...args2) => {
           setImmediate(() => {
-            handler(...args)
+            handler(...args2)
           })
         })
       })

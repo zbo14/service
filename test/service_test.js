@@ -2,7 +2,7 @@
 
 const expect = require('chai').expect
 const {describe, it} = require('mocha')
-const service = require('../src/service')
+const service = require('../src/index')
 
 const noop = () => {}
 
@@ -20,18 +20,23 @@ const stop = (emitter) => (cb) => {
   cb()
 }
 
-const emitter = service({
-  'handlers': {
-    'event': handler  
-  },
-  'start': start,
-  'stop': stop
-})
+const handlers = {
+  'event': handler
+}
+
+const emitter = service(handlers, start, stop)
 
 describe('service', () => {
   
   it('starts service', (done) => {
     emitter.emit('start', done)
+  })
+
+  it('pings service', (done) => {
+    emitter.once('pong', () => {
+      done()
+    })
+    emitter.emit('ping')
   })
 
   it('tests event handler', (done) => {
@@ -40,6 +45,14 @@ describe('service', () => {
 
   it('stops service', (done) => {
     emitter.emit('stop', done)
+  })
+
+  it('tries to ping service', (done) => {
+    emitter.once('pong', () => {
+      throw new Error('did not expect pong')
+    })
+    setTimeout(done, 500)
+    emitter.emit('ping')
   })
 
   it('starts service again', (done) => {
@@ -71,7 +84,7 @@ describe('service', () => {
     emitter.emit('stop', noop)
   })
 
-  it('starts service than tries to stop service multiple times', (done) => {
+  it('starts service then tries to stop service multiple times', (done) => {
     emitter.once('error', (err) => {
       expect(err).to.be.an('error')
       done()

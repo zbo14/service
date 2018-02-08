@@ -2,10 +2,11 @@
 
 const http = require('http')
 const {Server, OPEN} = require('ws')
-const service = require('./service')
+const service = require('../src/index')
 
 const accept = (emitter) => (server) => () => {
   server.on('connection', (conn) => {
+    emitter.emit('new-conn', conn)
     conn.on('message', (msg) => {
       if (typeof msg === 'string' && msg) {
         emitter.emit('broadcast', msg)
@@ -16,7 +17,7 @@ const accept = (emitter) => (server) => () => {
       }
     })
     conn.on('close', () => {
-      emitter.emit('remove', conn)
+      emitter.emit('remove-conn', conn)
     })
   })
 }
@@ -38,15 +39,16 @@ const close = (emitter) => (server) => () => {
   })
 }
 
-const remove = () => (server) => (conn) => {
+const newConn = () => () => () => {
+  console.log('Accepted new conn')
+}
+
+const removeConn = () => (server) => (conn) => {
   server.clients.delete(conn)
 }
 
 const start = (emitter) => (port) => {
-  const httpServer = http.createServer((req, res) => {
-    res.writeHead(404)
-    res.end()
-  })
+  const httpServer = http.createServer()
   const server = new Server({ 
     'server': httpServer 
   })
@@ -55,7 +57,7 @@ const start = (emitter) => (port) => {
       emitter.emit('error', err)
       emitter.emit('stop')
     } else {
-      return emitter.emit('register', server)
+      emitter.emit('register', server)
     }
   })
 }
@@ -64,16 +66,14 @@ const stop = (emitter) => () => {
   emitter.emit('unregister')
 }
 
+const handlers = {
+  'accept': accept,
+  'broadcast': broadcast,
+  'close': close,
+  'new-conn': newConn,
+  'remove-conn': removeConn
+}
+
 module.exports = () => {
-  return service({
-    'name': 'server',
-    'handlers': {
-      'accept': accept,
-      'broadcast': broadcast,
-      'close': close,
-      'remove': remove
-    },
-    'start': start,
-    'stop': stop
-  })
+  return service(handlers, start, stop)
 }
